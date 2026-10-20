@@ -1,8 +1,14 @@
+import { Suspense } from "react";
+import { WorkspaceSkeleton } from "@/components/shared/workspace-skeleton";
 import { ApiError, apiRequest, getWorkspace, items, unwrap } from "@/lib/api";
 import { OperationForm } from "@/components/shared/operation-form";
 
-export default async function Page() {
-  const workspace = await getWorkspace();
+export default function Page() {
+  return <Suspense fallback={<WorkspaceSkeleton title="Notifications" />}><NotificationsContent /></Suspense>;
+}
+
+async function NotificationsContent() {
+  const workspace = await getWorkspace("/notifications");
   let rows: Record<string, unknown>[] = [];
   let unread = 0;
   let error = "";

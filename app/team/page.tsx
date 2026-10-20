@@ -1,8 +1,14 @@
+import { Suspense } from "react";
+import { WorkspaceSkeleton } from "@/components/shared/workspace-skeleton";
 import { ApiError, apiRequest, getWorkspace, items } from "@/lib/api";
 import { OperationForm } from "@/components/shared/operation-form";
 
-export default async function Page({ searchParams }: { searchParams: Promise<{page?: string; search?: string}> }) {
-  const workspace = await getWorkspace();
+export default function Page({ searchParams }: { searchParams: Promise<{page?: string; search?: string}> }) {
+  return <Suspense fallback={<WorkspaceSkeleton title="Team" />}><TeamContent searchParams={searchParams} /></Suspense>;
+}
+
+async function TeamContent({ searchParams }: { searchParams: Promise<{page?: string; search?: string}> }) {
+  const workspace = await getWorkspace("/team");
   const params = await searchParams;
   const page = Math.min(10000, Math.max(1, Number(typeof params.page === "string" ? params.page : 1) || 1));
   const search = typeof params.search === "string" ? params.search.trim().slice(0,100) : "";

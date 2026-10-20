@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+import { WorkspaceSkeleton } from "@/components/shared/workspace-skeleton";
 import { apiRequest, getWorkspace, items, record, unwrap } from "@/lib/api";
 import { logout, logoutEverywhere, selectOrganization } from "@/app/login/actions";
 import { AccountForm } from "@/components/shared/account-form";
@@ -5,7 +7,11 @@ import { OperationForm } from "@/components/shared/operation-form";
 import { PreferencesForm } from "../preferences-form";
 import { RevokeSession } from "../session-action";
 
-export default async function Page() {
+export default function Page() {
+  return <Suspense fallback={<WorkspaceSkeleton title="Settings" />}><SettingsContent /></Suspense>;
+}
+
+async function SettingsContent() {
   const workspace = await getWorkspace("/settings/manage");
   const { organization, organizations, me, token, organizationId } = workspace;
   const [subscriptionResult, preferenceResult, sessionsResult] = await Promise.allSettled([

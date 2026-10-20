@@ -8,7 +8,7 @@ export default function Page({ params }: { params: Promise<{id: string}> }) {
 
 async function TargetContent({ params }: { params: Promise<{id: string}> }) {
   const { id } = await params;
-  const workspace = await getWorkspace();
+  const workspace = await getWorkspace(`/sales-targets/${encodeURIComponent(id)}`);
   let progress: Record<string,unknown> = {};
   let error = "";
   try { if (workspace.organizationId) progress = unwrap(await apiRequest(`/targets/${encodeURIComponent(id)}/progress`, { token:workspace.token, organizationId:workspace.organizationId })); }
