@@ -1,0 +1,2 @@
+import { ResourcePage } from "@/components/shared/resource-page";
+export default function Page({ searchParams }: { searchParams: Promise<{page?: string}> }) { return <ResourcePage searchParams={searchParams} config={{ actions: ['target.create'], title: "Sales targets", description: "Measure progress against goals.", path: "/targets", detailPath: "/sales-targets", columns: [{key:"name",label:"Target"},{key:"scope",label:"Scope"},{key:"period_start",label:"Start"},{key:"period_end",label:"End"},{key:"amount_paisa",label:"Amount",money:true}] }} />; }

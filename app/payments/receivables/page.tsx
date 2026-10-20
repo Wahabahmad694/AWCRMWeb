@@ -1,0 +1,2 @@
+import { ResourcePage } from "@/components/shared/resource-page";
+export default function Page({ searchParams }: { searchParams: Promise<{page?: string; search?: string}> }) { return <ResourcePage searchParams={searchParams} config={{"title": "Receivables", "description": "Outstanding customer balances.", "path": "/receivables", "columns": [{"key": "customer_name", "label": "Customer", "money": false}, {"key": "balance_paisa", "label": "Balance", "money": true}, {"key": "last_payment_at", "label": "Last payment", "money": false}], "paged": true, "actions": []}} />; }

@@ -1,0 +1,2 @@
+import { ResourcePage } from "@/components/shared/resource-page";
+export default function Page({ searchParams }: { searchParams: Promise<{page?: string; search?: string}> }) { return <ResourcePage searchParams={searchParams} config={{"title": "Expense categories", "description": "Classify business spending.", "path": "/expense-categories", "columns": [{"key": "name", "label": "Name", "money": false}], "paged": false, "actions": ["category.expense.create"]}} />; }

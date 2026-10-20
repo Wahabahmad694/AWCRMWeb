@@ -1,0 +1,2 @@
+import { ConnectionState } from "@/components/shared/connection-state";
+export function FeaturePage({ title, description }: { title: string; description: string }) { return <div className="page-wrap"><div className="page-heading"><div><div className="eyebrow">A.W CRM</div><h1>{title}</h1><p>{description}</p></div></div><section className="panel feature-panel"><ConnectionState title={`${title} is ready for integration`} description="This area will display authorized business records after the NestJS OpenAPI contract and session endpoints are supplied."/></section></div>; }

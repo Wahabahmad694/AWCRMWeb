@@ -1,0 +1,2 @@
+import { getWorkspace } from "@/lib/api";
+export default async function Page() { await getWorkspace(); return <div className="page-wrap"><div className="page-heading"><div><div className="eyebrow">ASSISTANT</div><h1>AI Assistant</h1><p>Your business copilot.</p></div></div><section className="panel feature-panel"><div className="resource-state">The current API does not provide an AI chat endpoint yet.</div></section></div>; }
