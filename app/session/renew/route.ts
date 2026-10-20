@@ -1,9 +1,10 @@
+import { safeReturnPath } from "@/lib/navigation";
 import { NextRequest, NextResponse } from "next/server";
 import { ACCESS_COOKIE, ORG_COOKIE, REFRESH_COOKIE, apiRequest, record, unwrap } from "@/lib/api";
 
 export async function GET(request: NextRequest) {
   const refresh = request.cookies.get(REFRESH_COOKIE)?.value;
-  const destination = new URL("/dashboard", request.url);
+  const destination = new URL(safeReturnPath(request.nextUrl.searchParams.get("next")), request.url);
   if (!refresh) return NextResponse.redirect(new URL("/login", request.url));
   try {
     const payload = unwrap(await apiRequest("/auth/refresh", { method: "POST", body: { refresh_token: refresh } }));

@@ -3,9 +3,13 @@ import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { ACCESS_COOKIE, REFRESH_COOKIE } from "@/lib/api";
 import { AppShell } from "@/components/shell/app-shell";
+import { WorkspaceSkeleton } from "@/components/shared/workspace-skeleton";
 import "./globals.css";
 
-export const metadata: Metadata = { title: { default: "A.W CRM", template: "%s | A.W CRM" }, description: "A.W CRM business workspace" };
+export const metadata: Metadata = {
+  title: "AW CRM | AI-Powered Business Management Platform",
+  description: "Manage orders, products, inventory, payments, and business growth in one connected AW CRM workspace.",
+};
 
 async function WorkspaceShell({ children }: { children: React.ReactNode }) {
   const jar = await cookies();
@@ -14,5 +18,5 @@ async function WorkspaceShell({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <html lang="en"><body><Suspense fallback={<div className="app-loading">Loading workspace…</div>}><WorkspaceShell>{children}</WorkspaceShell></Suspense></body></html>;
+  return <html lang="en"><body><Suspense fallback={<div className="app-loading"><WorkspaceSkeleton /></div>}><WorkspaceShell>{children}</WorkspaceShell></Suspense></body></html>;
 }

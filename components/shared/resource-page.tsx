@@ -1,4 +1,8 @@
 import Link from "next/link";
+import { resourceReturnPath } from "@/lib/navigation";
+import { EmptyState } from "@/components/shared/empty-state";
+import { StatusBadge } from "@/components/shared/status-badge";
+import { WorkspaceSkeleton } from "@/components/shared/workspace-skeleton";
 import { Suspense } from "react";
 import { OperationForm } from "@/components/shared/operation-form";
 import { ApiError, apiRequest, getWorkspace, items, record } from "@/lib/api";
@@ -26,7 +30,7 @@ function columnValue(row: Record<string, unknown>, column: Column) {
 }
 
 export function ResourcePage({ config, searchParams }: Props) {
-  return <Suspense fallback={<div className="page-wrap" aria-busy="true"><div className="page-heading"><div><div className="eyebrow">WORKSPACE</div><h1>{config.title}</h1><p>{config.description}</p></div></div><section className="panel resource-panel" aria-label={`${config.title} records`}><div className="resource-state" role="status">Loading {config.title.toLowerCase()}…</div></section></div>}>
+  return <Suspense fallback={<WorkspaceSkeleton title={config.title} />}>
     <ResourceContent config={config} searchParams={searchParams} />
   </Suspense>;
 }
@@ -38,7 +42,7 @@ async function ResourceContent({ config, searchParams }: Props) {
   const page = Math.min(10000, Math.max(1, Number.parseInt(pageInput, 10) || 1));
   const search = searchInput.trim().slice(0, 100);
   let workspace: Awaited<ReturnType<typeof getWorkspace>>;
-  try { workspace = await getWorkspace(); }
+  try { workspace = await getWorkspace(resourceReturnPath(config.path)); }
   catch (error) {
     if (!(error instanceof ApiError)) throw error;
     return <div className="page-wrap"><div className="page-heading"><div><div className="eyebrow">WORKSPACE</div><h1>{config.title}</h1><p>{config.description}</p></div></div><section className="panel resource-panel" aria-label={`${config.title} records`}><div className="resource-state" role="alert">{error.message}</div></section></div>;
@@ -64,9 +68,9 @@ async function ResourceContent({ config, searchParams }: Props) {
   return <div className="page-wrap"><div className="page-heading"><div><div className="eyebrow">{organizationName || "WORKSPACE"}</div><h1>{config.title}</h1><p>{config.description}</p></div></div>
     {config.links && <nav className="context-links" aria-label="Related views">{config.links.map(link => <Link key={link.href} href={link.href}>{link.label}</Link>)}</nav>}
     {config.actions && config.actions.length > 0 && <div className="operation-grid">{config.actions.map(id => <OperationForm key={id} operationId={id} />)}</div>}
-    {config.search && <form className="resource-search" action="" method="get"><label htmlFor="resource-search">Search {config.title.toLowerCase()}</label><div><input id="resource-search" name="search" defaultValue={search} placeholder="Search records" /><button type="submit">Search</button></div></form>}
+    {config.search && <form className="resource-search" action="" method="get"><label htmlFor="resource-search">Search {config.title.toLowerCase()}</label><div><input id="resource-search" name="search" defaultValue={search} placeholder={`Search ${config.title.toLowerCase()}…`} /><button type="submit">Search</button></div></form>}
     <section className="panel resource-panel" aria-label={`${config.title} records`}>
-      {errorMessage ? <div className="resource-state" role="alert">{errorMessage}</div> : !data ? <div className="resource-state">Select or create an organization to view records.</div> : rows.length === 0 ? <div className="resource-state">No {config.title.toLowerCase()} found.</div> : <div className="resource-table-wrap"><table className="resource-table"><thead><tr>{config.columns.map(column => <th key={column.key} scope="col">{column.label}</th>)}{config.rowActions && <th scope="col">Actions</th>}</tr></thead><tbody>{rows.map((row, index) => <tr key={String(row.id ?? index)}>{config.columns.map(column => <td key={column.key}>{column.key === config.columns[0].key && config.detailPath && typeof row[config.idKey ?? "id"] === "string" ? <Link href={`${config.detailPath}/${row[config.idKey ?? "id"]}`}>{textValue(columnValue(row, column), column.money)}</Link> : textValue(columnValue(row, column), column.money)}</td>)}{config.rowActions && <td><div className="row-actions">{config.rowActions.map(id => typeof row.id === "string" ? <OperationForm key={id} operationId={id} entityId={row.id} defaults={row} /> : null)}</div></td>}</tr>)}</tbody></table></div>}
+      {errorMessage ? <div className="resource-state" role="alert">{errorMessage}</div> : !data ? <div className="resource-state">Select or create an organization to view records.</div> : rows.length === 0 ? <EmptyState title={search ? "No matching records" : `Your ${config.title.toLowerCase()} start here`} description={search ? "Try a different search term to find what you need." : config.actions?.length ? "Use the actions above to add your first record. Everything will be organized here." : "Records will appear here as your business gets moving."} /> : <div className="resource-table-wrap"><table className="resource-table"><thead><tr>{config.columns.map(column => <th key={column.key} scope="col">{column.label}</th>)}{config.rowActions && <th scope="col">Actions</th>}</tr></thead><tbody>{rows.map((row, index) => <tr key={String(row.id ?? index)}>{config.columns.map(column => <td key={column.key}>{column.key === config.columns[0].key && config.detailPath && typeof row[config.idKey ?? "id"] === "string" ? <Link href={`${config.detailPath}/${row[config.idKey ?? "id"]}`}>{textValue(columnValue(row, column), column.money)}</Link> : /(^status$|_status$)/.test(column.key) ? <StatusBadge value={textValue(columnValue(row, column))} /> : textValue(columnValue(row, column), column.money)}</td>)}{config.rowActions && <td><div className="row-actions">{config.rowActions.map(id => typeof row.id === "string" ? <OperationForm key={id} operationId={id} entityId={row.id} defaults={row} /> : null)}</div></td>}</tr>)}</tbody></table></div>}
     </section>
     {config.paged !== false && rows.length > 0 && <nav className="pagination" aria-label="Pagination"><span>{total === undefined ? `Page ${page}` : `${total} records · Page ${page}`}</span><div>{page > 1 && <Link href={query(page - 1)}>Previous</Link>}{next && <Link href={query(page + 1)}>Next</Link>}</div></nav>}
   </div>;

@@ -1,4 +1,5 @@
 import "server-only";
+import { safeReturnPath } from "@/lib/navigation";
 import { cookies } from "next/headers";
 import { cache } from "react";
 import { redirect } from "next/navigation";
@@ -57,14 +58,15 @@ export async function apiRequest(path: string, options: { method?: string; body?
   return payload;
 }
 
-export const getWorkspace = cache(async function getWorkspace() {
+export const getWorkspace = cache(async function getWorkspace(returnTo = "/dashboard") {
+  const renewPath = `/session/renew?next=${encodeURIComponent(safeReturnPath(returnTo))}`;
   const jar = await cookies();
   const token = jar.get(ACCESS_COOKIE)?.value;
-  if (!token) redirect(jar.get(REFRESH_COOKIE)?.value ? "/session/renew" : "/login");
+  if (!token) redirect(jar.get(REFRESH_COOKIE)?.value ? renewPath : "/login");
   let me: unknown;
   try { me = await apiRequest("/auth/me", { token }); }
   catch (error) {
-    if (error instanceof ApiError && error.status === 401) redirect("/session/renew");
+    if (error instanceof ApiError && error.status === 401) redirect(renewPath);
     throw error;
   }
   const rawOrganizations = await apiRequest("/organizations", { token });

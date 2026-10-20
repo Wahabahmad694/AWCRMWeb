@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { resourceReturnPath } from "@/lib/navigation";
 import { Suspense } from "react";
 import { OperationForm } from "@/components/shared/operation-form";
 import { ApiError, apiRequest, getWorkspace, items, unwrap } from "@/lib/api";
@@ -19,7 +20,7 @@ export function DetailPage(props: DetailProps) {
 
 async function DetailContent({ title, path, back, actions = [], related = [] }: DetailProps) {
   let workspace: Awaited<ReturnType<typeof getWorkspace>>;
-  try { workspace = await getWorkspace(); }
+  try { workspace = await getWorkspace(resourceReturnPath(path)); }
   catch (cause) {
     if (!(cause instanceof ApiError)) throw cause;
     return <div className="page-wrap"><div className="page-heading"><div><div className="eyebrow"><Link href={back}>← Back to {title.toLowerCase()}</Link></div><h1>{title}</h1></div></div><section className="panel detail-panel"><p role="alert">{cause.message}</p></section></div>;

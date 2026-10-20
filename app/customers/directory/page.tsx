@@ -1,0 +1,2 @@
+import { ResourcePage } from "@/components/shared/resource-page";
+export default function Page({ searchParams }: { searchParams: Promise<{page?: string; search?: string}> }) { return <ResourcePage searchParams={searchParams} config={{ actions: ['customer.create'], title: "Customers", description: "Manage relationships and balances.", path: "/customers", search: true, detailPath: "/customers", columns: [{key:"name",label:"Name"},{key:"business_name",label:"Business"},{key:"phone",label:"Phone"},{key:"type",label:"Type"},{key:"status",label:"Status"}] }} />; }

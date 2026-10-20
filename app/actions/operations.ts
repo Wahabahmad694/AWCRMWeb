@@ -98,6 +98,10 @@ export async function runOperation(operationId: string, entityId: string | undef
     if (error instanceof ApiError) return { error: error.status === 409 && error.code === "version_conflict" ? "This record changed since you opened it. Refresh and try again." : error.message };
     return { error: "Unable to complete the action." };
   }
-  for (const path of operation.refresh) revalidatePath(path);
+  for (const path of operation.refresh) {
+    revalidatePath(path);
+    const currentViews: Record<string, string> = { "/customers": "/customers/directory", "/reports": "/reports/overview", "/settings": "/settings/manage" };
+    if (currentViews[path]) revalidatePath(currentViews[path]);
+  }
   return { success: `${operation.label} completed.`, nextKey: operation.idempotent ? crypto.randomUUID() : undefined };
 }
