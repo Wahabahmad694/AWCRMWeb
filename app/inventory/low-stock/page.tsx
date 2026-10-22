@@ -1,2 +1,2 @@
-import { ResourcePage } from "@/components/shared/resource-page";
-export default function Page({ searchParams }: { searchParams: Promise<{page?: string; search?: string}> }) { return <ResourcePage searchParams={searchParams} config={{"title": "Low stock", "description": "Products that need attention.", "path": "/inventory/low-stock", "columns": [{"key": "product_name", "label": "Product", "money": false}, {"key": "sku", "label": "SKU", "money": false}, {"key": "on_hand", "label": "On hand", "money": false}, {"key": "low_stock_level", "label": "Threshold", "money": false}], "paged": false, "actions": []}} />; }
+import { InventoryView } from "@/components/shared/inventory-view";
+export default function Page({ searchParams }: { searchParams: Promise<{page?: string; search?: string}> }) { return <InventoryView mode="low" searchParams={searchParams} />; }

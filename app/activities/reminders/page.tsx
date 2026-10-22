@@ -1,2 +1,2 @@
-import { ResourcePage } from "@/components/shared/resource-page";
-export default function Page({ searchParams }: { searchParams: Promise<{page?: string; search?: string}> }) { return <ResourcePage searchParams={searchParams} config={{"title": "Reminders", "description": "Upcoming and completed follow-ups.", "path": "/reminders", "columns": [{"key": "subject", "label": "Subject", "money": false}, {"key": "due_at", "label": "Due", "money": false}, {"key": "completed", "label": "Completed", "money": false}], "paged": true, "rowActions": ['reminder.update'], "actions": ["reminder.create"]}} />; }
+import { ActivityView } from "@/components/shared/activity-view";
+export default function Page({ searchParams }: { searchParams: Promise<{page?: string; search?: string; view?: string}> }) { return <ActivityView mode="reminders" searchParams={searchParams} />; }

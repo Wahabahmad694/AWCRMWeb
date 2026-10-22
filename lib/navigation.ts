@@ -11,7 +11,7 @@ export function safeReturnPath(value: string | null | undefined): string {
 /** API resources and browser routes do not always share the same name. */
 export function resourceReturnPath(path: string): string {
   const routes: Record<string, string> = {
-    "/customers": "/customers/directory",
+    "/customers": "/customers",
     "/targets": "/sales-targets",
     "/reminders": "/activities/reminders",
     "/product-categories": "/products/categories",

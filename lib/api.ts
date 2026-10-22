@@ -59,7 +59,10 @@ export async function apiRequest(path: string, options: { method?: string; body?
 }
 
 export const getWorkspace = cache(async function getWorkspace(returnTo = "/dashboard") {
-  const renewPath = `/session/renew?next=${encodeURIComponent(safeReturnPath(returnTo))}`;
+  // Route Handlers must be reached as a document navigation here. A client-side
+  // RSC redirect to the renewal endpoint can treat its HTTP redirect as an
+  // unexpected server response instead of opening the login page.
+  const renewPath = `/session/continue?next=${encodeURIComponent(safeReturnPath(returnTo))}`;
   const jar = await cookies();
   const token = jar.get(ACCESS_COOKIE)?.value;
   if (!token) redirect(jar.get(REFRESH_COOKIE)?.value ? renewPath : "/login");

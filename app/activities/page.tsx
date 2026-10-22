@@ -1,2 +1,2 @@
-import { ResourcePage } from "@/components/shared/resource-page";
-export default function Page({ searchParams }: { searchParams: Promise<{page?: string}> }) { return <ResourcePage searchParams={searchParams} config={{ links: [{label:'Reminders',href:'/activities/reminders'}], actions: ['activity.create', 'reminder.create'], title: "Activities", description: "Follow up on the work that matters.", path: "/activities", detailPath: "/activities", columns: [{key:"title",label:"Activity",fallbackKeys:["subject","body","content","note"]},{key:"type",label:"Type"},{key:"status",label:"Status"},{key:"due_at",label:"Due"}] }} />; }
+import { ActivityView } from "@/components/shared/activity-view";
+export default function Page({ searchParams }: { searchParams: Promise<{page?: string; search?: string; type?: string; view?: string}> }) { return <ActivityView mode="activities" searchParams={searchParams} />; }
