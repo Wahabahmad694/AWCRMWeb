@@ -27,5 +27,5 @@ async function WorkspaceShell({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <html lang="en" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: 'try{const t=localStorage.getItem("aw-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch{}' }} /></head><body><Suspense fallback={<div className="app-loading"><WorkspaceSkeleton /></div>}><WorkspaceShell>{children}</WorkspaceShell></Suspense></body></html>;
+  return <html lang="en" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{ __html: 'try{if(localStorage.getItem("aw-theme")==="dark")document.documentElement.classList.add("dark")}catch{}' }} /></head><body><Suspense fallback={<div className="app-loading"><WorkspaceSkeleton /></div>}><WorkspaceShell>{children}</WorkspaceShell></Suspense></body></html>;
 }
