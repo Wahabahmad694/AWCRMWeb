@@ -10,7 +10,7 @@ function defaultValue(field: Field, data: Record<string, unknown>) {
   const value = field.key === "expected_version" ? data.version : data[field.key];
   if (value === null || value === undefined) return "";
   if (field.kind === "tags" && Array.isArray(value)) return value.join(", ");
-  if (field.kind === "money" && typeof value === "number") return (value / 100).toFixed(2);
+  if ((field.kind === "money" || field.kind === "signedMoney") && typeof value === "number") return (value / 100).toFixed(2);
   return String(value);
 }
 
@@ -33,7 +33,7 @@ export function OperationForm({ operationId, entityId, defaults = {}, defaultOpe
         : field.kind === "select" ? <select id={id} name={field.key} defaultValue={defaultValue(field,defaults)} required={field.required}><option value="">Choose…</option>{field.options?.map(option => <option key={option} value={option}>{option.replaceAll("_"," ")}</option>)}</select>
         : field.kind === "textarea" ? <textarea id={id} name={field.key} defaultValue={defaultValue(field,defaults)} required={field.required} rows={3} maxLength={field.max} />
         : field.kind === "checkbox" ? <input id={id} name={field.key} type="checkbox" defaultChecked={defaults[field.key] === true} />
-        : <input id={id} name={field.key} type={field.kind === "password" ? "password" : field.kind === "email" ? "email" : field.kind === "date" ? "date" : field.kind === "money" || field.kind === "integer" || field.kind === "nonnegativeInteger" || field.kind === "quantity" ? "number" : "text"} step={field.kind === "money" ? "0.01" : field.kind === "quantity" ? "0.001" : field.kind === "integer" || field.kind === "nonnegativeInteger" ? "1" : undefined} min={field.kind === "money" || field.kind === "quantity" || field.kind === "nonnegativeInteger" ? 0 : undefined} max={field.kind === "nonnegativeInteger" ? field.max : undefined} maxLength={field.kind === "text" || field.kind === "uuid" || field.kind === "email" ? field.max : undefined} defaultValue={defaultValue(field,defaults)} required={field.required} placeholder={field.kind === "datetime" ? "2026-10-19T12:00:00+05:00" : field.kind === "uuid" ? "UUID" : undefined} />}
+        : <input id={id} name={field.key} type={field.kind === "password" ? "password" : field.kind === "email" ? "email" : field.kind === "date" ? "date" : field.kind === "money" || field.kind === "signedMoney" || field.kind === "integer" || field.kind === "nonnegativeInteger" || field.kind === "quantity" ? "number" : "text"} step={field.kind === "money" || field.kind === "signedMoney" ? "0.01" : field.kind === "quantity" ? "0.001" : field.kind === "integer" || field.kind === "nonnegativeInteger" ? "1" : undefined} min={field.kind === "money" || field.kind === "quantity" || field.kind === "nonnegativeInteger" ? 0 : undefined} max={field.kind === "nonnegativeInteger" ? field.max : undefined} maxLength={field.kind === "text" || field.kind === "uuid" || field.kind === "email" ? field.max : undefined} defaultValue={defaultValue(field,defaults)} required={field.required} placeholder={field.kind === "datetime" ? "2026-10-19T12:00:00+05:00" : field.kind === "uuid" ? "UUID" : undefined} />}
         {helper && <small>{helper}</small>}
       </label>;
     })}

@@ -17,6 +17,14 @@ function parseMoney(value: string): number | null {
   return Number.isSafeInteger(total) && total <= 100000000000000 ? total : null;
 }
 
+function parseSignedMoney(value: string): number | null {
+  if (!/^-?\d+(?:\.\d{1,2})?$/.test(value)) return null;
+  const negative = value.startsWith("-");
+  const [rupees, paisa = ""] = value.replace("-", "").split(".");
+  const total = Number(rupees) * 100 + Number(paisa.padEnd(2, "0"));
+  return Number.isSafeInteger(total) && total <= 100000000000000 ? (negative ? -total : total) : null;
+}
+
 function parseField(field: Field, form: FormData, operationId: string): { value?: unknown; error?: string } {
   if (field.kind === "checkbox") return { value: form.get(field.key) === "on" };
   const raw = form.get(field.key);
@@ -31,6 +39,10 @@ function parseField(field: Field, form: FormData, operationId: string): { value?
     const amount = parseMoney(value);
     if (amount === null || (amount === 0 && ["payment.create","refund.create","expense.create"].includes(operationId))) return { error: `Enter a valid ${field.label.toLowerCase()}.` };
     return { value: amount };
+  }
+  if (field.kind === "signedMoney") {
+    const amount = parseSignedMoney(value);
+    return amount === null ? { error: `Enter a valid ${field.label.toLowerCase()}.` } : { value: amount };
   }
   if (field.kind === "integer") {
     const number = Number(value);
@@ -84,10 +96,9 @@ export async function runOperation(operationId: string, entityId: string | undef
     if (result.value !== undefined) body[field.key] = result.value;
   }
   if (operationId === "accountTransfer.create" && body.from_account_id === body.to_account_id) return { error: "Choose two different accounts." };
-  if (operationId === "paymentAccount.create" && typeof body.masked_number === "string" && /\d{9}/.test(body.masked_number)) return { error: "Use a masked number with no more than eight consecutive digits." };
+  if (operationId.startsWith("paymentAccount.") && typeof body.account_number_masked === "string" && /\d{9}/.test(body.account_number_masked)) return { error: "Use a masked number with no more than eight consecutive digits." };
   if (operationId === "organization.create" && !body.currency) body.currency = "PKR";
   if (operationId === "accountTransfer.create" && body.from_account_id === body.to_account_id) return { error: "Choose two different accounts." };
-  if (operationId === "paymentAccount.create" && typeof body.masked_number === "string" && /\d{9}/.test(body.masked_number)) return { error: "Use a masked number with no more than eight consecutive digits." };
   if (operationId === "organization.create" && !body.timezone) body.timezone = "Asia/Karachi";
   if (operationId === "target.create" && !body.month) return { error: "Month is required for this target." };
   if (operationId === "team.invite" && !body.email && !body.phone) return { error: "Enter an email or phone number." };

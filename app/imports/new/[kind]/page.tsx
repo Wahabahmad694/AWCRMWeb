@@ -1,10 +1,17 @@
 import Link from "next/link";
-import { ModuleHeader } from "@/components/modules/module-ui";
+import { Suspense } from "react";
+import { ModuleCard, ModuleHeader } from "@/components/modules/module-ui";
 import { moduleDetail, moduleList } from "@/lib/module-data";
 import { record } from "@/lib/api";
 import { ImportWizard } from "@/components/modules/import-wizard";
 
-export default async function Page({ params, searchParams }: { params: Promise<{ kind: string }>; searchParams: Promise<{ job?: string; step?: string; page?: string }> }) {
+type Props = { params: Promise<{ kind: string }>; searchParams: Promise<{ job?: string; step?: string; page?: string }> };
+
+export default function Page(props: Props) {
+  return <Suspense fallback={<div className="module-page"><ModuleHeader eyebrow="ADMIN / IMPORT" title="Import data" description="Preparing the import workspace…" /><ModuleCard><div className="module-list-skeleton" role="status" aria-label="Loading import workspace"><div /><div /><div /><div /></div></ModuleCard></div>}><ImportContent {...props} /></Suspense>;
+}
+
+async function ImportContent({ params, searchParams }: Props) {
   const { kind } = await params;
   if (kind !== "customers" && kind !== "products") return <div className="module-page"><ModuleHeader eyebrow="ADMIN / IMPORT" title="Unknown import type" description="Choose customers or products." /><Link href="/imports">Back to imports</Link></div>;
   const query = await searchParams;
