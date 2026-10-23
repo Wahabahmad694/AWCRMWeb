@@ -19,7 +19,7 @@ function toOffsetDateTime(local: string) {
   return `${local}:00${sign}${hours}:${minutes}`;
 }
 
-export function PaymentTransactionForm({ mode, customers, orders, customerError, orderError, customersLimited, ordersLimited }: { mode: "payment" | "refund"; customers: Customer[]; orders: Order[]; customerError?: string; orderError?: string; customersLimited: boolean; ordersLimited: boolean }) {
+export function PaymentTransactionForm({ mode, customers, orders, accounts, customerError, orderError, customersLimited, ordersLimited }: { mode: "payment" | "refund"; customers: Customer[]; orders: Order[]; accounts: { id: string; name: string; type: string }[]; customerError?: string; orderError?: string; customersLimited: boolean; ordersLimited: boolean }) {
   const refund = mode === "refund";
   const [customerId, setCustomerId] = useState("");
   const [receivedLocal, setReceivedLocal] = useState("");
@@ -31,6 +31,7 @@ export function PaymentTransactionForm({ mode, customers, orders, customerError,
     <label><span>Order <em>optional</em></span><select key={customerId} name="order_id" defaultValue="" disabled={pending || Boolean(orderError)}><option value="">No linked order</option>{filteredOrders.map(order => <option key={order.id} value={order.id}>{order.number} · {order.total}</option>)}</select><small>{orderError ? `Orders unavailable: ${orderError}` : ordersLimited ? "Some orders are not shown." : "Orders for the chosen customer are shown when available."}</small></label>
     <label><span>Amount (PKR) *</span><div className="payments-money-input"><strong>Rs</strong><input name="amount_paisa" type="number" min="0.01" step="0.01" inputMode="decimal" placeholder="0.00" required disabled={pending} /></div></label>
     <label><span>Method *</span><select name="method" defaultValue="" required disabled={pending}><option value="">Choose a method…</option>{methods.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+    {accounts.length > 0 && <label><span>Payment account</span><select name="payment_account_id" defaultValue={accounts.find(account => account.type === "cash")?.id ?? accounts[0].id} disabled={pending}>{accounts.map(account => <option key={account.id} value={account.id}>{account.name}</option>)}</select></label>}
     <label><span>Reference</span><input name="reference" placeholder="Receipt or transfer reference" disabled={pending} /></label>
     <label><span><CalendarClock size={14} /> Received at</span><input type="datetime-local" value={receivedLocal} onChange={event => setReceivedLocal(event.target.value)} disabled={pending} /><small>Choose local date and time; the UTC offset is added on submit.</small></label>
     {refund && <label className="payments-wide-field"><span>Reason *</span><textarea name="reason" rows={3} required placeholder="Why is this payment being refunded?" disabled={pending} /></label>}

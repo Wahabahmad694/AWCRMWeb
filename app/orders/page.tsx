@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { ArrowUpRight, Clock3, CreditCard, PackageCheck, ShoppingBag } from "lucide-react";
 import { ApiError, apiRequest, getWorkspace, items, record } from "@/lib/api";
+import { directoryOptions } from "@/lib/directory-options";
 import { formatPaisa } from "@/lib/display";
 import { OperationForm } from "@/components/shared/operation-form";
 import { StatusBadge } from "@/components/shared/status-badge";
@@ -38,11 +39,43 @@ async function OrdersContent({ searchParams }: { searchParams: Promise<Query> })
   let organizationName = "WORKSPACE";
   let error = "";
   let noOrganization = false;
+  let customerOptions: { value: string; label: string }[] = [];
+  let customerError = "";
+  let customersLimited = false;
+  let productOptions: { value: string; label: string }[] = [];
+  let productError = "";
+  let productsLimited = false;
   try {
     const workspace = await getWorkspace("/orders");
     organizationName = text(workspace.organization?.name) === "—" ? "WORKSPACE" : String(workspace.organization?.name);
     noOrganization = !workspace.organizationId;
-    if (workspace.organizationId) data = await apiRequest("/orders", { token: workspace.token, organizationId: workspace.organizationId, query: { page, limit: pageSize, ...(query.search ? { search: query.search } : {}) } });
+    if (workspace.organizationId) {
+      const [ordersResult, customersResult, productsResult] = await Promise.allSettled([
+        apiRequest("/orders", { token: workspace.token, organizationId: workspace.organizationId, query: { page, limit: pageSize, ...(query.search ? { search: query.search } : {}) } }),
+        directoryOptions("/customers", workspace.token, workspace.organizationId),
+        directoryOptions("/products", workspace.token, workspace.organizationId),
+      ]);
+      if (ordersResult.status === "fulfilled") data = ordersResult.value;
+      else error = ordersResult.reason instanceof ApiError ? ordersResult.reason.message : "Unable to load orders.";
+      if (customersResult.status === "fulfilled") {
+        customersLimited = customersResult.value.limited;
+        customerOptions = customersResult.value.rows
+          .filter(customer => typeof customer.id === "string" && typeof customer.name === "string")
+          .map(customer => ({
+            value: String(customer.id),
+            label: [String(customer.name), text(customer.business_name) !== "—" ? String(customer.business_name) : ""].filter(Boolean).join(" · "),
+          }));
+      } else customerError = customersResult.reason instanceof ApiError ? customersResult.reason.message : "Unable to load customers.";
+      if (productsResult.status === "fulfilled") {
+        productsLimited = productsResult.value.limited;
+        productOptions = productsResult.value.rows
+          .filter(product => typeof product.id === "string" && typeof product.name === "string" && product.status !== "archived")
+          .map(product => ({
+            value: String(product.id),
+            label: [String(product.name), text(product.sku) !== "—" ? String(product.sku) : ""].filter(Boolean).join(" · "),
+          }));
+      } else productError = productsResult.reason instanceof ApiError ? productsResult.reason.message : "Unable to load products.";
+    }
   } catch (cause) { error = cause instanceof ApiError && cause.status === 403 ? "Your role does not have access to orders." : cause instanceof Error ? cause.message : "Unable to load orders."; }
   const rows = items(data);
   const envelope = record(data);
@@ -82,6 +115,11 @@ async function OrdersContent({ searchParams }: { searchParams: Promise<Query> })
       })}</tbody></table></div>}
     </section>
     {data !== null && rows.length > 0 && <nav className="pagination" aria-label="Order pages"><span>Page {page}{total !== undefined ? ` · ${total.toLocaleString()} records` : ""}</span><div>{page > 1 && <Link href={pageHref(query, page - 1)}>Previous</Link>}{hasNext && <Link href={pageHref(query, page + 1)}>Next</Link>}</div></nav>}
-    <div id="create-order" className="orders-create"><OperationForm operationId="order.create" defaultOpen /></div>
+    <div id="create-order" className="orders-create">
+      {customerError && <p role="alert" className="form-error">Customers could not be loaded: {customerError}</p>}
+      {productError && <p role="alert" className="form-error">Products could not be loaded: {productError}</p>}
+      {(customersLimited || productsLimited) && <p className="orders-filter-note">The {customersLimited && productsLimited ? "customer and product lists are" : customersLimited ? "customer list is" : "product list is"} limited. Check the directory if an item is missing.</p>}
+      <OperationForm key={`${page}:${query.search}:${query.status}:${query.payment}:${query.sort}`} operationId="order.create" defaultOpen selectOptions={{ customer_id: customerOptions }} lineOptions={productOptions} />
+    </div>
   </div>;
 }

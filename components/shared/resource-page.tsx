@@ -82,7 +82,7 @@ async function ResourceContent({ config, searchParams }: Props) {
   const query = (n: number) => `?page=${n}${search ? `&search=${encodeURIComponent(search)}` : ""}`;
   return <div className="page-wrap"><div className="page-heading"><div><div className="eyebrow">{organizationName || "WORKSPACE"}</div><h1>{config.title}</h1><p>{config.description}</p></div></div>
     {config.links && <nav className="context-links" aria-label="Related views">{config.links.map(link => <Link key={link.href} href={link.href}>{link.label}</Link>)}</nav>}
-    {optionErrors.length > 0 && <div className="notice" role="alert">Could not load expense categories: {optionErrors.join(" ")}</div>}
+    {optionErrors.length > 0 && <div className="notice" role="alert">Could not load form options: {optionErrors.join(" ")}</div>}
     {config.actions && config.actions.length > 0 && <div className="operation-grid">{config.actions.map(id => <OperationForm key={id} operationId={id} selectOptions={actionOptions[id]} />)}</div>}
     {config.search && <form className="resource-search" action="" method="get"><label htmlFor="resource-search">Search {config.title.toLowerCase()}</label><div><input id="resource-search" name="search" defaultValue={search} placeholder={`Search ${config.title.toLowerCase()}…`} /><button type="submit">Search</button></div></form>}
     <section className="panel resource-panel" aria-label={`${config.title} records`}>

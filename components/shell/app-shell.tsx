@@ -2,7 +2,7 @@
 
 import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, ShoppingBag, Package, Boxes, Wallet, Target, Receipt, ChartNoAxesCombined, ListTodo, UserRoundCog, Sparkles, Settings, Bell, Menu, X, ChevronRight, ArrowUpRight, LoaderCircle, KanbanSquare, FileText, Sun, Moon, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, ShoppingBag, Package, Boxes, Wallet, Target, Receipt, ChartNoAxesCombined, ListTodo, UserRoundCog, Sparkles, Settings, Bell, Menu, X, ChevronRight, ArrowUpRight, LoaderCircle, KanbanSquare, FileText, Sun, Moon, LogOut, RotateCcw, Landmark, Upload, StickyNote } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { logout } from "@/app/login/actions";
 
@@ -10,17 +10,21 @@ const navigation = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, group: "WORKSPACE" },
   { label: "Leads", href: "/leads", icon: KanbanSquare, group: "WORKSPACE" },
   { label: "Quotations", href: "/quotations", icon: FileText, group: "WORKSPACE" },
+  { label: "Returns", href: "/returns", icon: RotateCcw, group: "WORKSPACE" },
   { label: "Customers", href: "/customers", icon: Users, group: "WORKSPACE" },
   { label: "Orders", href: "/orders", icon: ShoppingBag, group: "WORKSPACE" },
   { label: "Products", href: "/products", icon: Package, group: "WORKSPACE" },
   { label: "Inventory", href: "/inventory", icon: Boxes, group: "WORKSPACE" },
   { label: "Payments", href: "/payments", icon: Wallet, group: "BUSINESS" },
+  { label: "Credit notes", href: "/credit-notes", icon: StickyNote, group: "BUSINESS" },
+  { label: "Cash and bank", href: "/cash-bank", icon: Landmark, group: "BUSINESS" },
   { label: "Sales targets", href: "/sales-targets", icon: Target, group: "BUSINESS" },
   { label: "Expenses", href: "/expenses", icon: Receipt, group: "BUSINESS" },
   { label: "Reports", href: "/reports", icon: ChartNoAxesCombined, group: "BUSINESS" },
   { label: "Activities", href: "/activities", icon: ListTodo, group: "MANAGE" },
   { label: "Team", href: "/team", icon: UserRoundCog, group: "MANAGE" },
   { label: "AI Assistant", href: "/ai-assistant", icon: Sparkles, group: "MANAGE" },
+  { label: "Imports", href: "/imports", icon: Upload, group: "MANAGE" },
   { label: "Settings", href: "/settings", icon: Settings, group: "MANAGE" },
 ];
 

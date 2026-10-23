@@ -9,6 +9,7 @@ type Props = {
   apiPath: string;
   back: string;
   actions?: string[];
+  actionGroupsByStatus?: Record<string, string[]>;
   related?: (id: string) => RelatedSection[];
 };
 
@@ -16,8 +17,8 @@ export function ParamDetailPage(props: Props) {
   return <Suspense fallback={<div className="page-wrap" aria-busy="true"><div className="page-heading"><div><div className="eyebrow"><Link href={props.back}>← Back to {props.title.toLowerCase()}</Link></div><h1>{props.title}</h1><p>Loading record details…</p></div></div></div>}><ParamDetailContent {...props} /></Suspense>;
 }
 
-async function ParamDetailContent({ params, title, apiPath, back, actions, related }: Props) {
+async function ParamDetailContent({ params, title, apiPath, back, actions, actionGroupsByStatus, related }: Props) {
   const { id } = await params;
   const encodedId = encodeURIComponent(id);
-  return <DetailPage title={title} path={`${apiPath}/${encodedId}`} back={back} actions={actions} related={related?.(encodedId)} />;
+  return <DetailPage title={title} path={`${apiPath}/${encodedId}`} back={back} actions={actions} actionGroupsByStatus={actionGroupsByStatus} related={related?.(encodedId)} />;
 }

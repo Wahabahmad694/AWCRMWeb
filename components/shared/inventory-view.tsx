@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { ArrowDownRight, ArrowUpRight, Boxes, ClipboardList, Package, TriangleAlert } from "lucide-react";
 import { ApiError, apiRequest, getWorkspace, items, record } from "@/lib/api";
+import { directoryOptions } from "@/lib/directory-options";
 import { OperationForm } from "@/components/shared/operation-form";
 import { WorkspaceSkeleton } from "@/components/shared/workspace-skeleton";
 
@@ -40,11 +41,28 @@ async function InventoryContent({ mode, searchParams }: { mode: Mode; searchPara
   let organizationName = "WORKSPACE";
   let noOrganization = false;
   let error = "";
+  let productOptions: { value: string; label: string }[] = [];
+  let productError = "";
+  let productsLimited = false;
   try {
     const workspace = await getWorkspace(path);
     organizationName = label(workspace.organization?.name) === "—" ? "WORKSPACE" : String(workspace.organization?.name);
     noOrganization = !workspace.organizationId;
-    if (workspace.organizationId) data = await apiRequest(path, { token: workspace.token, organizationId: workspace.organizationId, query: mode === "low" ? undefined : { page, limit: pageSize, ...(query.search ? { search: query.search } : {}) } });
+    if (workspace.organizationId) {
+      const [inventoryResult, productsResult] = await Promise.allSettled([
+        apiRequest(path, { token: workspace.token, organizationId: workspace.organizationId, query: mode === "low" ? undefined : { page, limit: pageSize, ...(query.search ? { search: query.search } : {}) } }),
+        mode === "stock" ? directoryOptions("/products", workspace.token, workspace.organizationId) : Promise.resolve({ rows: [], limited: false }),
+      ]);
+      if (inventoryResult.status === "fulfilled") data = inventoryResult.value;
+      else error = inventoryResult.reason instanceof Error ? inventoryResult.reason.message : "Unable to load inventory.";
+      if (productsResult.status === "fulfilled") {
+        productsLimited = productsResult.value.limited;
+        productOptions = productsResult.value.rows
+          .filter(product => typeof product.id === "string" && typeof product.name === "string" && product.status !== "archived")
+          .map(product => ({ value: String(product.id), label: [String(product.name), typeof product.sku === "string" && product.sku ? product.sku : ""].filter(Boolean).join(" · ") }))
+          .sort((a, b) => a.label.localeCompare(b.label));
+      } else if (mode === "stock") productError = productsResult.reason instanceof Error ? productsResult.reason.message : "Unable to load products.";
+    }
   } catch (cause) { error = cause instanceof ApiError && cause.status === 403 ? "Your role does not have access to inventory." : cause instanceof Error ? cause.message : "Unable to load inventory."; }
   const rows = items(data);
   const envelope = record(data);
@@ -67,6 +85,6 @@ async function InventoryContent({ mode, searchParams }: { mode: Mode; searchPara
       {error ? <div className="inventory-state" role="alert">{error}</div> : noOrganization ? <div className="inventory-state">Select or create an organization to view inventory.</div> : data === null ? <div className="inventory-state">Inventory data is unavailable.</div> : visible.length === 0 ? <div className="inventory-state"><span className="inventory-state-icon">{mode === "low" ? <TriangleAlert size={27} /> : <Boxes size={27} />}</span><strong>{mode === "low" && !query.search ? "No low stock items" : mode === "movements" ? "No stock movements yet" : query.search || query.view ? "No matching stock" : "Your inventory starts here"}</strong><p>{mode === "low" && !query.search ? "Everything in this view is above its low stock threshold." : mode === "movements" ? "Stock changes will appear here as they happen." : query.search || query.view ? "Try a different search or clear the filters." : "Add products to start monitoring stock."}</p>{(query.search || query.view) && <Link href={path}>Clear filters</Link>}</div> : <div className="inventory-table-wrap"><table className="inventory-table"><thead>{mode === "movements" ? <tr><th>Product</th><th>Movement</th><th>Change</th><th>When</th></tr> : <tr><th>Product</th><th>SKU</th><th>On hand</th><th>{mode === "low" ? "Threshold" : "Available"}</th><th>Stock status</th><th aria-label="Open inventory item" /></tr>}</thead><tbody>{visible.map((row, index) => { const id = typeof row.product_id === "string" ? row.product_id : typeof row.id === "string" && mode !== "movements" ? row.id : ""; const name = label(row.product_name ?? row.name ?? record(row.product).name ?? row.sku); return mode === "movements" ? <tr key={String(row.id ?? index)}><td><div className="inventory-product"><span><Package size={16} /></span><strong>{name}</strong></div></td><td><span className="inventory-movement-type">{label(row.type)}</span></td><td className="inventory-quantity">{typeof row.quantity === "number" ? <span className={row.quantity < 0 ? "negative" : "positive"}>{row.quantity > 0 ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}{quantity(row.quantity)}</span> : "—"}</td><td>{date(row.created_at)}</td></tr> : <tr key={id || index}><td><div className="inventory-product"><span><Package size={16} /></span><div>{id ? <Link href={`/inventory/${encodeURIComponent(id)}`}>{name}</Link> : <strong>{name}</strong>}<small>{label(record(row.product).name) !== "—" && label(record(row.product).name) !== name ? label(record(row.product).name) : "Stock item"}</small></div></div></td><td className="inventory-sku">{label(row.sku)}</td><td className="inventory-quantity">{quantity(row.on_hand)}</td><td className="inventory-quantity">{quantity(mode === "low" ? row.low_stock_level : row.available)}</td><td><span className={`inventory-stock-badge ${mode === "low" || low(row) ? "attention" : "healthy"}`}><span />{mode === "low" || low(row) ? "Low stock" : "In stock"}</span></td><td>{id && <Link className="inventory-view" href={`/inventory/${encodeURIComponent(id)}`}>View <ArrowUpRight size={14} /></Link>}</td></tr>; })}</tbody></table></div>}
     </section>
     {mode !== "low" && data !== null && rows.length > 0 && <nav className="pagination" aria-label="Inventory pages"><span>Page {page}{total !== undefined ? ` · ${total.toLocaleString()} records` : ""}</span><div>{page > 1 && <Link href={pageHref(mode, query, page - 1)}>Previous</Link>}{hasNext && <Link href={pageHref(mode, query, page + 1)}>Next</Link>}</div></nav>}
-    {mode === "stock" && <section id="stock-actions" className="inventory-actions"><div className="inventory-actions-heading"><span className="inventory-kicker">KEEP STOCK ACCURATE</span><h2>Stock actions</h2><p>Adjust quantities or record a counted stocktake.</p></div><div><OperationForm operationId="inventory.adjust" /><OperationForm operationId="inventory.stocktake" /></div></section>}
+    {mode === "stock" && <section id="stock-actions" className="inventory-actions"><div className="inventory-actions-heading"><span className="inventory-kicker">KEEP STOCK ACCURATE</span><h2>Stock actions</h2><p>Adjust quantities or record a counted stocktake.</p></div>{productError && <p role="alert" className="form-error">Products could not be loaded: {productError}</p>}{productsLimited && <p className="inventory-filter-note">The product list is limited. Check the product directory if an item is missing.</p>}<div><OperationForm operationId="inventory.adjust" lineOptions={productOptions} /><OperationForm operationId="inventory.stocktake" lineOptions={productOptions} /></div></section>}
   </div>;
 }

@@ -9,7 +9,7 @@ function totalFrom(value: unknown) {
   return typeof meta.total === "number" ? meta.total : typeof pagination.total === "number" ? pagination.total : typeof envelope.total === "number" ? envelope.total : undefined;
 }
 
-export async function directoryOptions(path: "/customers" | "/orders", token: string, organizationId: string) {
+export async function directoryOptions(path: "/customers" | "/orders" | "/products", token: string, organizationId: string) {
   const limit = 100;
   const maxPages = 10;
   const first = await apiRequest(path, { token, organizationId, query: { page: 1, limit } });

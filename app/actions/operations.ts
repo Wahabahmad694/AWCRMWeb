@@ -21,7 +21,9 @@ function parseField(field: Field, form: FormData, operationId: string): { value?
   if (field.kind === "checkbox") return { value: form.get(field.key) === "on" };
   const raw = form.get(field.key);
   const value = typeof raw === "string" ? raw.trim() : "";
+  if (!value && operationId === "product.update" && field.key === "category_id" && raw !== null) return { value: null };
   if (!value) return field.required ? { error: `${field.label} is required.` } : {};
+  if (field.max !== undefined && (field.kind === "text" || field.kind === "textarea") && value.length > field.max) return { error: `${field.label} must be ${field.max} characters or less.` };
   if (field.options && !field.options.includes(value)) return { error: `Choose a valid ${field.label.toLowerCase()}.` };
   if (field.kind === "uuid" && !uuid.safeParse(value).success) return { error: `${field.label} must be a valid ID.` };
   if (field.kind === "email" && !z.email().safeParse(value).success) return { error: `${field.label} must be a valid email.` };
@@ -35,7 +37,7 @@ function parseField(field: Field, form: FormData, operationId: string): { value?
     if (!Number.isSafeInteger(number) || number < 1) return { error: `${field.label} must be a positive whole number.` };
     return { value: number };
   }
-  if (field.kind === "nonnegativeInteger") { const number = Number(value); if (!Number.isSafeInteger(number) || number < 0) return { error: `${field.label} must be a nonnegative whole number.` }; return { value:number }; }
+  if (field.kind === "nonnegativeInteger") { const number = Number(value); if (!Number.isSafeInteger(number) || number < 0) return { error: `${field.label} must be a nonnegative whole number.` }; if (field.max !== undefined && number > field.max) return { error: `${field.label} must be ${field.max} or less.` }; return { value:number }; }
   if (field.kind === "tags") { const tags = value.split(",").map(tag => tag.trim()).filter(Boolean); if (tags.length > 20 || tags.some(tag => tag.length > 40)) return { error:"Enter up to 20 tags, each at most 40 characters." }; return { value:tags }; }
   if (field.kind === "quantity" && !positiveDecimal.test(value)) return { error: `${field.label} must be a nonnegative decimal.` };
   if (field.kind === "date" && !/^\d{4}-\d{2}-\d{2}$/.test(value)) return { error: `${field.label} must be a date.` };
@@ -81,7 +83,11 @@ export async function runOperation(operationId: string, entityId: string | undef
     if (result.error) return { error: result.error };
     if (result.value !== undefined) body[field.key] = result.value;
   }
+  if (operationId === "accountTransfer.create" && body.from_account_id === body.to_account_id) return { error: "Choose two different accounts." };
+  if (operationId === "paymentAccount.create" && typeof body.masked_number === "string" && /\d{9}/.test(body.masked_number)) return { error: "Use a masked number with no more than eight consecutive digits." };
   if (operationId === "organization.create" && !body.currency) body.currency = "PKR";
+  if (operationId === "accountTransfer.create" && body.from_account_id === body.to_account_id) return { error: "Choose two different accounts." };
+  if (operationId === "paymentAccount.create" && typeof body.masked_number === "string" && /\d{9}/.test(body.masked_number)) return { error: "Use a masked number with no more than eight consecutive digits." };
   if (operationId === "organization.create" && !body.timezone) body.timezone = "Asia/Karachi";
   if (operationId === "target.create" && !body.month) return { error: "Month is required for this target." };
   if (operationId === "team.invite" && !body.email && !body.phone) return { error: "Enter an email or phone number." };
